@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoPada Astro Suite</title>
+    <style>
+        /* --- CORE THEME --- */
+        :root {
+            --primary: #4338ca; /* Indigo 700 */
+            --primary-light: #e0e7ff;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --font-sans: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --font-serif: 'Georgia', serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding-bottom: 50px;
+        }
+
+        /* --- LAYOUT UTILS --- */
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .hidden { display: none !important; }
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .card-header {
+            padding: 15px 20px; border-bottom: 1px solid var(--border);
+            background: #f8fafc; font-weight: bold; color: var(--text-main);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .card-body { padding: 20px; }
+        .btn {
+            cursor: pointer; border: none; border-radius: 6px; padding: 8px 16px;
+            font-size: 0.9rem; font-weight: 500; transition: all 0.2s;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: #3730a3; }
+        .btn-outline { background: white; border: 1px solid var(--border); color: var(--text-sub); }
+        .btn-outline:hover { border-color: #cbd5e1; color: var(--text-main); }
+        .btn-outline.active { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
+        .btn-icon { background: transparent; padding: 8px; font-size: 1.2rem; cursor: pointer; border:none; border-radius: 50%; }
+        .btn-icon:hover { background: #f1f5f9; }
+
+        /* --- HEADER & NAV --- */
+        header {
+            background: var(--surface); border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .header-content {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 20px; max-width: 1400px; margin: 0 auto;
+        }
+        .logo-area h1 { font-family: var(--font-serif); font-size: 1.25rem; }
+        .logo-area span { font-size: 0.75rem; color: var(--text-sub); text-transform: uppercase; letter-spacing: 1px; }
+        
+        .nav-tabs {
+            display: flex; gap: 5px; background: #f1f5f9; padding: 5px; border-radius: 8px;
+        }
+        .nav-tab {
+            padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9rem; color: var(--text-sub);
+            border: 1px solid transparent;
+        }
+        .nav-tab.active { background: white; color: var(--primary); shadow: 0 1px 2px rgba(0,0,0,0.1); border-color: var(--border); }
+
+        /* --- RECTIFICATION VIEW STYLES --- */
+        .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .input-group label { display: block; font-size: 0.8rem; font-weight: bold; color: var(--text-sub); margin-bottom: 5px; }
+        .input-group input, .input-group textarea {
+            width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; font-family: monospace;
+        }
+        .charts-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;
+        }
+        
+        /* SOUTH INDIAN CHART STYLE */
+        .south-chart {
+            width: 100%; aspect-ratio: 1; border: 1px solid #94a3b8; background: white;
+            display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr);
+        }
+        .house { 
+            border: 1px solid #e2e8f0; position: relative; padding: 2px; 
+            display: flex; flex-wrap: wrap; align-items: center; justify-content: center; align-content: center; gap: 2px;
+        }
+        /* Grid Placement */
+        .h-Pi { grid-row:1; grid-column:1; } .h-Ar { grid-row:1; grid-column:2; } .h-Ta { grid-row:1; grid-column:3; } .h-Ge { grid-row:1; grid-column:4; }
+        .h-Aq { grid-row:2; grid-column:1; }                                                                         .h-Cn { grid-row:2; grid-column:4; }
+        .h-Cp { grid-row:3; grid-column:1; }                                                                         .h-Le { grid-row:3; grid-column:4; }
+        .h-Sg { grid-row:4; grid-column:1; } .h-Sc { grid-row:4; grid-column:2; } .h-Li { grid-row:4; grid-column:3; } .h-Vi { grid-row:4; grid-column:4; }
+        
+        .chart-center {
+            grid-row: 2/4; grid-column: 2/4; border: none;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; background: #f8fafc;
+        }
+        .chart-label { font-size: 1.1rem; font-weight: bold; color: var(--primary); font-family: var(--font-serif); }
+        .chart-sub { font-size: 0.8rem; color: var(--text-sub); }
+
+        .planet-badge {
+            font-size: 0.7rem; font-weight: bold; padding: 2px 4px; border-radius: 4px;
+            color: #1e293b; box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+            cursor: default;
+        }
+        .p-lagna { background: #ef4444 !important; color: white !important; }
+
+        /* RECTIFICATION CONTROLS */
+        .rect-controls {
+            background: #f0f9ff; border: 1px solid #bae6fd; padding: 15px; border-radius: 8px;
+            display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 20px;
+        }
+
+        /* --- VARGA EXPLORER STYLES --- */
+        .d-input-wrapper { display: flex; align-items: center; gap: 10px; }
+        .d-label { font-size: 2rem; font-family: var(--font-serif); color: #cbd5e1; }
+        #d-input {
+            font-size: 2.5rem; font-weight: bold; width: 120px; border: none; border-bottom: 2px solid #e0e7ff; outline: none;
+        }
+        
+        /* STRIP */
+        .strip-wrapper {
+            width: 100%; overflow-x: auto; padding-bottom: 10px; margin-top: 15px;
+            scrollbar-width: thin; scrollbar-color: #cbd5e1 #f1f5f9;
+        }
+        .strip-flex { display: flex; width: max-content; }
+        .strip-item { 
+            width: 60px; height: 80px; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; border-right: 1px solid rgba(0,0,0,0.05); 
+            position: relative; flex-shrink: 0; padding-top: 15px;
+        }
+        .strip-deg { 
+            position: absolute; top: -6px; left: 0; font-size: 9px; font-weight: 800; 
+            background: #fff; padding: 1px 4px; border-radius: 4px; border: 1px solid #cbd5e1; z-index: 5;
+        }
+        .strip-idx { font-size: 10px; color: #64748b; margin-top: 4px; }
+        .strip-symbol { font-size: 1.1rem; font-weight: 800; }
+
+        /* CALCULATOR */
+        .calc-box { background: #1e1b4b; color: white; border-radius: 12px; padding: 25px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: center; }
+        .calc-input { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); width: 100%; padding: 12px; border-radius: 6px; color: white; font-family: monospace; font-size: 1.1rem; }
+        .res-circle { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; background: white; color: black; margin: 0 auto 10px auto; }
+        
+        /* TABLE */
+        .ref-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        .ref-table th { text-align: left; padding: 10px; background: #f1f5f9; border-bottom: 2px solid #e2e8f0; font-size: 0.8rem; text-transform: uppercase; }
+        .ref-table td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; }
+        .row-group-start { border-top: 2px solid #cbd5e1; }
+        .bg-group-even { background-color: #f8fafc; }
+
+        /* --- MODALS --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);
+            z-index: 1000; display: none; justify-content: center; align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: white; padding: 30px; border-radius: 12px; max-width: 500px; width: 90%; position: relative; }
+        .close-modal { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 1.2rem; }
+
+        @media (max-width: 768px) {
+            .header-content { flex-direction: column; gap: 10px; }
+            .calc-box { grid-template-columns: 1fr; }
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+    "d3": "https://aistudiocdn.com/d3@^7.9.0",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0"
+  }
+}
+</script>
+</head>
+<body>
+
+    <!-- HELP MODAL -->
+    <div class="modal-overlay" id="help-modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="toggleHelp()">✕</span>
+            <h2 style="font-family: var(--font-serif); margin-bottom: 10px;">About this Tool</h2>
+            <p style="margin-bottom: 10px; color: #555;">This application combines two powerful modules:</p>
+            <ul style="margin-left: 20px; margin-bottom: 15px; color: #555; font-size: 0.9rem;">
+                <li><strong>Rectification Dashboard:</strong> Standard Vedic Charts (D1, D9, D10 etc.) using traditional calculation rules (Parashara). Ideal for birth time rectification.</li>
+                <li><strong>Varga Explorer:</strong> A learning tool based on the "Parivritti" (Cyclical) method. It allows you to visualize any division (D1-D300) as a continuous loop.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ZODIAC DIVISOR MODAL -->
+    <div class="modal-overlay" id="zodiac-tool-modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="toggleZodiacTool()">✕</span>
+            <h2 style="font-family: var(--font-serif); margin-bottom: 15px;">360° Zodiac Divider</h2>
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
+                <span style="font-size:1.2rem; font-weight:bold; color:#64748b">360° ÷</span>
+                <input type="number" id="zd-input" style="flex:1; padding:10px; font-size:1.2rem; border:2px solid #e2e8f0; border-radius:6px;" placeholder="27" oninput="calculateZodiacDiv()">
+            </div>
+            <div id="zd-result" style="background:#f0f9ff; color:#0369a1; padding:15px; border-radius:8px; text-align:center; font-weight:bold; font-size:1.2rem;">-</div>
+            <div id="zd-warn" style="color:#d97706; font-size:0.85rem; margin-top:10px; display:none;">⚠️ Result has fractional seconds.</div>
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <header>
+        <div class="header-content">
+            <div class="logo-area">
+                <h1>GoPada Astro Suite</h1>
+                <span>Rectification & Research</span>
+            </div>
+            
+            <div class="nav-tabs">
+                <div class="nav-tab active" id="tab-btn-dash" onclick="switchTab('dashboard')">Rectification Dashboard</div>
+                <div class="nav-tab" id="tab-btn-expl" onclick="switchTab('explorer')">Varga Explorer</div>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+                <button class="btn-icon" onclick="toggleZodiacTool()" title="360 Divider">🖩</button>
+                <button class="btn-icon" onclick="toggleHelp()" title="Help">ℹ️</button>
+                <button class="btn btn-primary" onclick="printActiveView()">Print View</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        
+        <!-- === VIEW 1: RECTIFICATION DASHBOARD === -->
+        <div id="view-dashboard">
+            <!-- INPUTS -->
+            <div class="card">
+                <div class="card-header">
+                    Birth Data Input
+                    <button class="btn btn-outline" onclick="loadSampleData()">Load Sample</button>
+                </div>
+                <div class="card-body">
+                    <div class="input-grid">
+                        <div class="input-group">
+                            <label>Name</label>
+                            <input type="text" id="userName" value="User">
+                        </div>
+                        <div class="input-group">
+                            <label>Birth Time (HH:MM)</label>
+                            <input type="time" id="birthTimeInput" value="14:30">
+                        </div>
+                        <div class="input-group" style="grid-column: span 2;">
+                            <label>Chart Data (Paste from Software)</label>
+                            <textarea id="chartData" rows="3" placeholder="Body Longitude..."></textarea>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" style="width:100%; justify-content: center;" onclick="generateRectificationCharts()">Generate Charts</button>
+                </div>
+            </div>
+
+            <!-- RECTIFICATION CONTROLS -->
+            <div class="rect-controls" id="rect-controls" style="display:none;">
+                <div style="text-align:right;">
+                    <div style="font-size:0.8rem; font-weight:bold; color:var(--text-sub);">TIME ADJUSTMENT</div>
+                    <div id="rect-new-time" style="font-family:monospace; color:var(--primary);">14:30</div>
+                </div>
+                <button class="btn btn-outline" onclick="shiftTime(-1)">-1 Min</button>
+                <div style="width:100px; text-align:center;">
+                    <input type="number" id="shift-val" value="0" step="0.01" style="width:60px; text-align:center; padding:5px; border-radius:4px; border:1px solid #ccc;" onchange="applyManualShift()">
+                    <div style="font-size:0.7rem; color:#888;">Minutes</div>
+                </div>
+                <button class="btn btn-outline" onclick="shiftTime(1)">+1 Min</button>
+                <button class="btn btn-outline" onclick="resetShift()">Reset</button>
+            </div>
+
+            <!-- CHARTS GRID -->
+            <div id="charts-area" class="charts-grid" style="display:none;">
+                <!-- D1 -->
+                <div class="card">
+                    <div class="card-header">D1 - Rasi</div>
+                    <div class="card-body">
+                        <div id="chart-d1" class="south-chart"></div>
+                    </div>
+                </div>
+                <!-- D9 -->
+                <div class="card">
+                    <div class="card-header">D9 - Navamsa</div>
+                    <div class="card-body">
+                        <div id="chart-d9" class="south-chart"></div>
+                    </div>
+                </div>
+                <!-- D10 -->
+                <div class="card">
+                    <div class="card-header">D10 - Dasamsa</div>
+                    <div class="card-body">
+                        <div id="chart-d10" class="south-chart"></div>
+                    </div>
+                </div>
+                 <!-- D12 -->
+                 <div class="card">
+                    <div class="card-header">D12 - Dwadasamsa</div>
+                    <div class="card-body">
+                        <div id="chart-d12" class="south-chart"></div>
+                    </div>
+                </div>
+                <!-- D4 -->
+                <div class="card">
+                    <div class="card-header">D4 - Chaturthamsa</div>
+                    <div class="card-body">
+                        <div id="chart-d4" class="south-chart"></div>
+                    </div>
+                </div>
+                <!-- D7 -->
+                <div class="card">
+                    <div class="card-header">D7 - Saptamsa</div>
+                    <div class="card-body">
+                        <div id="chart-d7" class="south-chart"></div>
+                    </div>
+                </div>
+                 <!-- D24 -->
+                 <div class="card">
+                    <div class="card-header">D24 - Siddhamsas</div>
+                    <div class="card-body">
+                        <div id="chart-d24" class="south-chart"></div>
+                    </div>
+                </div>
+                 <!-- D60 -->
+                 <div class="card">
+                    <div class="card-header">D60 - Shashtyamsa</div>
+                    <div class="card-body">
+                        <div id="chart-d60" class="south-chart"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- PLANET DATA -->
+            <div class="card" id="planet-table-card" style="display:none; margin-top:20px;">
+                <div class="card-header">Planetary Longitudes & Dignities</div>
+                <div class="card-body" style="overflow-x:auto;">
+                    <table class="ref-table" id="planet-table">
+                        <thead><tr><th>Planet</th><th>D1 Longitude</th><th>D9</th><th>D10</th><th>D60</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- === VIEW 2: VARGA EXPLORER === -->
+        <div id="view-explorer" class="hidden">
+            <div style="display:grid; grid-template-columns: 300px 1fr; gap:20px;">
+                
+                <!-- CONTROL PANEL -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-input-wrapper">
+                            <span class="d-label">D</span>
+                            <input type="number" id="exp-d-input" value="9" min="1" max="300" oninput="updateExplorerUI()">
+                        </div>
+                        <div style="margin-top:15px; font-size:0.9rem; color:var(--text-sub);">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                                <span>Total Parts:</span> <strong id="exp-total">108</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                                <span>Span:</span> <strong id="exp-span">3° 20'</strong>
+                            </div>
+                        </div>
+                        <div id="exp-clean-warn" style="display:none; color:#d97706; font-size:0.8rem; margin-top:10px;">
+                            ⚠️ Fractional seconds
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VISUALIZER STRIP -->
+                <div class="card">
+                    <div class="card-header">
+                        <span>Cyclical Sequence Preview</span>
+                        <span style="font-size:0.8rem; color:var(--text-sub);">First 60 Slices (Scroll →)</span>
+                    </div>
+                    <div class="card-body" style="padding-top:0;">
+                         <div class="strip-wrapper">
+                            <div class="strip-flex" id="strip-container"></div>
+                        </div>
+                        <p style="font-size:0.8rem; color:var(--text-sub); margin-top:10px;">
+                            *Shows the Parivritti loop. D1 boundaries marked with degrees.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CALCULATOR -->
+            <div class="calc-box">
+                <div>
+                    <h3 style="margin-bottom:10px;">Placement Calculator</h3>
+                    <p style="font-size:0.9rem; color:#a5b4fc; margin-bottom:15px;">Enter Longitude (e.g. "145.5" or "Le 25 30")</p>
+                    <input type="text" class="calc-input" id="calc-input" placeholder="Enter position..." oninput="handleCalc()">
+                </div>
+                <div style="text-align:center;">
+                    <div id="calc-res-empty" style="color:#818cf8; font-style:italic;">Result area</div>
+                    <div id="calc-res-content" style="display:none;">
+                        <div class="res-circle" id="calc-res-icon">?</div>
+                        <div style="font-weight:bold; font-size:1.2rem;" id="calc-res-name">Sign</div>
+                        <div style="font-family:monospace; color:#a5b4fc; font-size:0.9rem;" id="calc-res-span">0 - 0</div>
+                        <div style="font-size:0.8rem; margin-top:5px;">Part #<span id="calc-res-idx">0</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REFERENCE TABLE -->
+            <div class="card" style="margin-top:20px;">
+                <div class="card-header">
+                    Reference Table
+                    <div style="font-size:0.8rem;">
+                        <button class="btn btn-outline active" id="btn-list" onclick="toggleTableView('list')">List</button>
+                        <button class="btn btn-outline" id="btn-grid" onclick="toggleTableView('grid')">Grid</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="ref-table-container" style="max-height:600px; overflow-y:auto;">
+                        <table class="ref-table" id="ref-table-list">
+                            <thead><tr><th>Part #</th><th>Range</th><th>Sign</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                        <div id="ref-table-grid" style="display:none; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:10px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA ---
+        const ZODIAC = [
+            { id: 1, name: 'Aries', short: 'Ar', color: '#fee2e2', colorDark: '#ef4444', class:'h-Ar' },
+            { id: 2, name: 'Taurus', short: 'Ta', color: '#dcfce7', colorDark: '#22c55e', class:'h-Ta' },
+            { id: 3, name: 'Gemini', short: 'Ge', color: '#e0f2fe', colorDark: '#3b82f6', class:'h-Ge' },
+            { id: 4, name: 'Cancer', short: 'Cn', color: '#f3e8ff', colorDark: '#a855f7', class:'h-Cn' },
+            { id: 5, name: 'Leo', short: 'Le', color: '#ffedd5', colorDark: '#f97316', class:'h-Le' },
+            { id: 6, name: 'Virgo', short: 'Vi', color: '#ecfccb', colorDark: '#84cc16', class:'h-Vi' },
+            { id: 7, name: 'Libra', short: 'Li', color: '#f1f5f9', colorDark: '#64748b', class:'h-Li' },
+            { id: 8, name: 'Scorpio', short: 'Sc', color: '#ffe4e6', colorDark: '#f43f5e', class:'h-Sc' },
+            { id: 9, name: 'Sagittarius', short: 'Sg', color: '#fef3c7', colorDark: '#eab308', class:'h-Sg' },
+            { id: 10, name: 'Capricorn', short: 'Cp', color: '#ccfbf1', colorDark: '#14b8a6', class:'h-Cp' },
+            { id: 11, name: 'Aquarius', short: 'Aq', color: '#cffafe', colorDark: '#06b6d4', class:'h-Aq' },
+            { id: 12, name: 'Pisces', short: 'Pi', color: '#fae8ff', colorDark: '#d946ef', class:'h-Pi' },
+        ];
+        
+        const PLANETS = { 'Lagna': 'Asc', 'Sun': 'Su', 'Moon': 'Mo', 'Mars': 'Ma', 'Mercury': 'Me', 'Jupiter': 'Ju', 'Venus': 'Ve', 'Saturn': 'Sa', 'Rahu': 'Ra', 'Ketu': 'Ke' };
+        
+        // --- SHARED UTILS ---
+        function toDMS(deg, showSec=true) {
+            let d = Math.floor(deg);
+            let rest = (deg - d) * 60;
+            let m = Math.floor(rest);
+            let s = Math.round((rest - m) * 60);
+            if(s === 60) { s = 0; m++; }
+            if(m === 60) { m = 0; d++; }
+            if(!showSec && s === 0) return `${d}° ${m.toString().padStart(2,'0')}'`;
+            return `${d}° ${m.toString().padStart(2,'0')}' ${s.toString().padStart(2,'0')}"`;
+        }
+
+        // --- APP STATE ---
+        let currentView = 'dashboard';
+        let initialChartData = {}; 
+        let currentShiftMinutes = 0;
+        let initialBirthMinutes = 0;
+        let initialLagnaDeg = 0;
+        let generatedCharts = {}; // Stores D1, D9... data
+
+        // --- VIEW SWITCHING ---
+        function switchTab(tab) {
+            currentView = tab;
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(tab === 'dashboard' ? 'tab-btn-dash' : 'tab-btn-expl').classList.add('active');
+            
+            document.getElementById('view-dashboard').classList.add('hidden');
+            document.getElementById('view-explorer').classList.add('hidden');
+            document.getElementById(`view-${tab}`).classList.remove('hidden');
+
+            if(tab === 'explorer') updateExplorerUI();
+        }
+
+        function toggleHelp() {
+            const el = document.getElementById('help-modal');
+            el.classList.toggle('active');
+        }
+        function toggleZodiacTool() {
+            const el = document.getElementById('zodiac-tool-modal');
+            el.classList.toggle('active');
+        }
+
+        // ============================================
+        // MODULE 1: RECTIFICATION DASHBOARD LOGIC
+        // ============================================
+        
+        function loadSampleData() {
+            document.getElementById('chartData').value = `Body              Longitude        Nakshatra Pada Rasi Navamsa
+Lagna             27 Cp 17' 52.24" Dhan      2    Cp   Vi
+Sun - MK/PiK      13 Ta 38' 46.76" Rohi      2    Ta   Ta
+Moon - BK         16 Cn 48' 02.35" Asre      1    Cn   Sg
+Mars - PK          9 Vi 25' 31.08" UPha      4    Vi   Pi
+Mercury (R) - AmK 21 Ta 07' 57.67" Rohi      4    Ta   Cn
+Jupiter (R)        9 Li 22' 11.37" Swat      1    Li   Sg
+Venus - DK         3 Ar 55' 25.99" Aswi      2    Ar   Ta
+Saturn (R) - AK   23 Vi 24' 38.38" Chit      1    Vi   Le
+Rahu - GK         21 Ge 25' 44.80" Puna      1    Ge   Ar
+Ketu              21 Sg 25' 44.80" PSha      3    Sg   Li`;
+            document.getElementById('userName').value = "Sample User";
+        }
+
+        function parseRawData(text) {
+            const data = {};
+            const lines = text.split('\n');
+            let lagnaFound = false;
+
+            for(let line of lines) {
+                // Regex for "Sign Deg Min Sec" or JHora Text output style
+                // Looking for pattern: 27 Cp 17' 52.24"
+                const match = line.match(/(\d+)\s+([A-Za-z]{2})\s+(\d+)'\s+([\d.]+)"/);
+                if(match) {
+                    const deg = parseInt(match[1]);
+                    const signStr = match[2];
+                    const min = parseInt(match[3]);
+                    const sec = parseFloat(match[4]);
+                    
+                    const signObj = ZODIAC.find(z => z.short === signStr);
+                    if(!signObj) continue;
+
+                    const absDeg = ((signObj.id - 1) * 30) + deg + (min/60) + (sec/3600);
+                    
+                    // Identify Planet Name
+                    let pName = null;
+                    for(let key in PLANETS) {
+                        if(line.startsWith(key)) pName = key;
+                    }
+                    
+                    if(pName) {
+                        data[pName] = { absDeg: absDeg, rashiIndex: signObj.id - 1 }; // 0-11
+                        if(pName === 'Lagna') {
+                            initialLagnaDeg = absDeg;
+                            lagnaFound = true;
+                        }
+                    }
+                }
+            }
+            return lagnaFound ? data : null;
+        }
+
+        function generateRectificationCharts() {
+            const raw = document.getElementById('chartData').value;
+            initialChartData = parseRawData(raw);
+            
+            if(!initialChartData) {
+                alert("Could not parse data. Ensure format matches sample.");
+                return;
+            }
+
+            const timeStr = document.getElementById('birthTimeInput').value;
+            const parts = timeStr.split(':');
+            initialBirthMinutes = parseInt(parts[0])*60 + parseInt(parts[1]);
+            
+            document.getElementById('rect-controls').style.display = 'flex';
+            document.getElementById('charts-area').style.display = 'grid';
+            document.getElementById('planet-table-card').style.display = 'block';
+
+            currentShiftMinutes = 0;
+            updateRectificationUI();
+        }
+
+        function shiftTime(delta) {
+            currentShiftMinutes += delta;
+            document.getElementById('shift-val').value = currentShiftMinutes;
+            updateRectificationUI();
+        }
+        function applyManualShift() {
+            currentShiftMinutes = parseFloat(document.getElementById('shift-val').value);
+            updateRectificationUI();
+        }
+        function resetShift() {
+            currentShiftMinutes = 0;
+            document.getElementById('shift-val').value = 0;
+            updateRectificationUI();
+        }
+
+        // CORE ASTRO CALCULATION (PARASHARA RULES)
+        function getDivSign(absDeg, div, oddMapping, evenMapping) {
+            const signIdx = Math.floor(absDeg / 30); // 0-11
+            const degInSign = absDeg % 30;
+            const partNum = Math.floor(degInSign / (30/div)); // 0 to div-1
+            
+            const isOdd = (signIdx % 2 === 0); // Aries(0) is Odd
+            // Note: In code logic, 0=Aries (Odd), 1=Taurus (Even)
+            // oddMapping func takes current signIdx, returns Start Sign Index
+            
+            const startSign = isOdd ? oddMapping(signIdx) : evenMapping(signIdx);
+            return (startSign + partNum) % 12;
+        }
+
+        function calcCharts(data, shiftDeg) {
+            // Apply shift to Lagna ONLY
+            // Assumption: Planets don't move much in +/- few minutes, Lagna moves 1 deg in 4 min
+            // Lagna shift = shiftMinutes * 0.25 deg
+            
+            const shiftedLagna = (initialLagnaDeg + shiftDeg + 360) % 360;
+            
+            // Rebuild D1 with shifted Lagna
+            const currentD1 = { ...data };
+            currentD1['Lagna'] = { absDeg: shiftedLagna, rashiIndex: Math.floor(shiftedLagna / 30) };
+
+            const charts = {};
+            const divs = [1, 9, 10, 12, 4, 7, 24, 60];
+
+            divs.forEach(d => {
+                const chartPlanets = {};
+                for(let p in currentD1) {
+                    const pData = currentD1[p];
+                    let rIdx = 0;
+
+                    // Rules
+                    if (d === 1) rIdx = pData.rashiIndex;
+                    else if (d === 9) {
+                        // 1-9-6-3 rule (Fire-Earth-Air-Water)
+                        // Fire (0,4,8) starts at 0 (Ar)
+                        // Earth (1,5,9) starts at 8 (Cp) -> Code uses 9 rule in prompt? 
+                        // Prompt: r => (r%4==0)?0 : (r%4==1)?9 : (r%4==2)?6 : 3
+                        // Let's use simple lookup: Fire starts Ar(0), Earth starts Cp(9), Air starts Li(6), Water starts Cn(3)
+                        const startArr = [0, 9, 6, 3]; // Ar, Cp, Li, Cn
+                        const elem = pData.rashiIndex % 4;
+                        rIdx = (startArr[elem] + Math.floor((pData.absDeg % 30)/(30/9))) % 12;
+                    }
+                    else if (d === 10) rIdx = getDivSign(pData.absDeg, 10, r=>r, r=>(r+8)%12);
+                    else if (d === 12) rIdx = getDivSign(pData.absDeg, 12, r=>r, r=>r);
+                    else if (d === 4) {
+                         // Prompt D4 rule: (r + floor(deg/7.5)*3) % 12 (Special rule)
+                         // Wait, Prompt code said: if varga===4 { rashiIndex = (rashi + divIndex*3)%12 }
+                         const divIdx = Math.floor((pData.absDeg % 30) / 7.5);
+                         rIdx = (pData.rashiIndex + (divIdx*3)) % 12;
+                    }
+                    else if (d === 7) rIdx = getDivSign(pData.absDeg, 7, r=>r, r=>(r+6)%12);
+                    else if (d === 24) rIdx = getDivSign(pData.absDeg, 24, r=>4, r=>3); // Starts Leo/Cancer
+                    else if (d === 60) {
+                        // Standard: rIdx + part*1?? No, prompt code used: (r + floor(deg*2)) % 12 ??
+                        // Prompt code: rashiIndex = (pData.rashiIndex + Math.floor(deg * 2)) % 12;
+                        // This implies Parivritti starting from Current Sign? No.
+                        // Let's stick to prompt logic: (Sign + Part) % 12
+                        const part = Math.floor((pData.absDeg % 30) * 2);
+                        rIdx = (pData.rashiIndex + part) % 12;
+                    }
+                    
+                    chartPlanets[p] = rIdx;
+                }
+                charts['D'+d] = chartPlanets;
+            });
+            return charts;
+        }
+
+        function renderChartSVG(elementId, planetMap, title) {
+            const el = document.getElementById(elementId);
+            el.innerHTML = '';
+            
+            // Add Houses
+            ZODIAC.forEach(z => {
+                const div = document.createElement('div');
+                div.className = `house ${z.class}`;
+                // Find planets in this sign (0-11 index)
+                // z.id is 1-12, map uses 0-11
+                const pList = Object.keys(planetMap).filter(k => planetMap[k] === (z.id - 1));
+                
+                pList.forEach(p => {
+                    const badge = document.createElement('div');
+                    badge.className = `planet-badge ${p==='Lagna'?'p-lagna':''}`;
+                    // Color based on planet nature? Or just generic. Keep generic dark.
+                    badge.textContent = PLANETS[p];
+                    div.appendChild(badge);
+                });
+                
+                // Add Sign Short Label in corner
+                const lbl = document.createElement('div');
+                lbl.style = "position:absolute; bottom:1px; right:2px; font-size:9px; color:#ccc;";
+                lbl.textContent = z.short;
+                div.appendChild(lbl);
+
+                el.appendChild(div);
+            });
+
+            // Center Label
+            const ctr = document.createElement('div');
+            ctr.className = 'chart-center';
+            ctr.innerHTML = `<div class="chart-label">${title}</div>`;
+            el.appendChild(ctr);
+        }
+
+        function updateRectificationUI() {
+            // Update Time Display
+            const totalMin = initialBirthMinutes + currentShiftMinutes;
+            const h = Math.floor((totalMin/60)%24);
+            const m = Math.floor(totalMin%60);
+            document.getElementById('rect-new-time').textContent = 
+                `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+
+            // Calc
+            const shiftDeg = currentShiftMinutes * 0.25; // 1 min time = 0.25 deg Lagna approx
+            generatedCharts = calcCharts(initialChartData, shiftDeg);
+
+            // Render
+            renderChartSVG('chart-d1', generatedCharts.D1, 'D1');
+            renderChartSVG('chart-d9', generatedCharts.D9, 'D9');
+            renderChartSVG('chart-d10', generatedCharts.D10, 'D10');
+            renderChartSVG('chart-d12', generatedCharts.D12, 'D12');
+            renderChartSVG('chart-d4', generatedCharts.D4, 'D4');
+            renderChartSVG('chart-d7', generatedCharts.D7, 'D7');
+            renderChartSVG('chart-d24', generatedCharts.D24, 'D24');
+            renderChartSVG('chart-d60', generatedCharts.D60, 'D60');
+
+            // Table
+            const tbody = document.getElementById('planet-table').querySelector('tbody');
+            tbody.innerHTML = '';
+            Object.keys(PLANETS).forEach(p => {
+                 if(!initialChartData[p]) return;
+                 const d1Long = p==='Lagna' 
+                    ? (initialLagnaDeg + shiftDeg + 360)%360 
+                    : initialChartData[p].absDeg;
+                 
+                 const row = `<tr>
+                    <td>${p}</td>
+                    <td>${toDMS(d1Long, false)} ${ZODIAC[Math.floor(d1Long/30)].short}</td>
+                    <td>${ZODIAC[generatedCharts.D9[p]].short}</td>
+                    <td>${ZODIAC[generatedCharts.D10[p]].short}</td>
+                    <td>${ZODIAC[generatedCharts.D60[p]].short}</td>
+                 </tr>`;
+                 tbody.innerHTML += row;
+            });
+        }
+
+        // ============================================
+        // MODULE 2: VARGA EXPLORER LOGIC
+        // ============================================
+
+        let expDVal = 9;
+        let expTableView = 'list';
+
+        function updateExplorerUI() {
+            const inp = document.getElementById('exp-d-input');
+            expDVal = parseInt(inp.value) || 9;
+            if(expDVal < 1) expDVal = 1;
+
+            const total = 12 * expDVal;
+            const span = 30 / expDVal;
+            
+            // Stats
+            document.getElementById('exp-total').textContent = total;
+            document.getElementById('exp-span').textContent = toDMS(span);
+            const isClean = Math.abs((span * 3600) - Math.round(span * 3600)) < 0.01;
+            document.getElementById('exp-clean-warn').style.display = isClean ? 'none' : 'block';
+
+            // Strip
+            const strip = document.getElementById('strip-container');
+            strip.innerHTML = '';
+            const count = Math.min(total, 60); // Show 60
+            for(let i=0; i<count; i++) {
+                const sign = ZODIAC[i % 12];
+                const startDeg = i * span;
+                const isD1Boundary = Math.abs(startDeg % 30) < 0.01 || i===0;
+
+                const div = document.createElement('div');
+                div.className = 'strip-item';
+                div.style.background = sign.color;
+                div.innerHTML = `
+                    ${isD1Boundary ? `<div class="strip-deg">${Math.round(startDeg)}°</div>` : ''}
+                    <div class="strip-symbol" style="color:${sign.colorDark}">${sign.short}</div>
+                    <div class="strip-idx">#${i+1}</div>
+                `;
+                strip.appendChild(div);
+            }
+
+            // Table
+            renderRefTable(total, span);
+        }
+
+        function renderRefTable(total, span) {
+            const listBody = document.getElementById('ref-table-list').querySelector('tbody');
+            const gridDiv = document.getElementById('ref-table-grid');
+            
+            listBody.innerHTML = '';
+            gridDiv.innerHTML = '';
+
+            // Grid Cards Buffer
+            const gridCards = Array(12).fill('');
+
+            const limit = Math.min(total, 1000);
+            let lastD1 = -1;
+
+            for(let i=0; i<limit; i++) {
+                const start = i * span;
+                const end = (i+1) * span;
+                const sign = ZODIAC[i % 12];
+                
+                const d1Idx = Math.floor((start + 0.0001) / 30);
+                
+                // List Row
+                const tr = document.createElement('tr');
+                if(d1Idx % 2 === 0) tr.className = 'bg-group-even';
+                if(d1Idx !== lastD1 && i>0) tr.style.borderTop = "2px solid #ccc";
+                lastD1 = d1Idx;
+
+                tr.innerHTML = `<td>${i+1}</td><td>${toDMS(start)} - ${toDMS(end)}</td><td style="color:${sign.colorDark}; font-weight:bold;">${sign.name}</td>`;
+                listBody.appendChild(tr);
+
+                // Grid
+                if(d1Idx < 12) {
+                    const relStart = start - (d1Idx * 30);
+                    gridCards[d1Idx] += `<div style="display:flex; justify-content:space-between; font-size:0.8rem; border-bottom:1px dashed #eee; padding:2px;">
+                        <span>${toDMS(relStart,false)}</span>
+                        <span style="color:${sign.colorDark}; font-weight:bold;">${sign.short}</span>
+                    </div>`;
+                }
+            }
+
+            ZODIAC.forEach((z, idx) => {
+                gridDiv.innerHTML += `
+                    <div style="border:1px solid #e2e8f0; border-radius:6px; overflow:hidden;">
+                        <div style="background:${z.color}; color:${z.colorDark}; padding:5px 10px; font-weight:bold; font-size:0.9rem;">${z.name}</div>
+                        <div style="padding:5px; background:white;">${gridCards[idx]}</div>
+                    </div>
+                `;
+            });
+        }
+
+        function toggleTableView(mode) {
+            expTableView = mode;
+            document.getElementById('btn-list').className = mode === 'list' ? 'btn btn-outline active' : 'btn btn-outline';
+            document.getElementById('btn-grid').className = mode === 'grid' ? 'btn btn-outline active' : 'btn btn-outline';
+            document.getElementById('ref-table-list').style.display = mode === 'list' ? 'table' : 'none';
+            document.getElementById('ref-table-grid').style.display = mode === 'grid' ? 'grid' : 'none';
+        }
+
+        function handleCalc() {
+            const raw = document.getElementById('calc-input').value.trim();
+            const empty = document.getElementById('calc-res-empty');
+            const cont = document.getElementById('calc-res-content');
+            
+            let deg = null;
+            // Try Num
+            if(!isNaN(raw) && raw !== '') deg = parseFloat(raw);
+            else {
+                // Try Sign Deg Min
+                const parts = raw.split(/[\s,]+/);
+                if(parts.length >= 2) {
+                    const s = ZODIAC.find(z => z.short.toLowerCase() === parts[0].toLowerCase() || z.name.toLowerCase().startsWith(parts[0].toLowerCase()));
+                    if(s && !isNaN(parts[1])) {
+                         deg = ((s.id - 1) * 30) + parseFloat(parts[1]) + (parts[2] ? parseFloat(parts[2])/60 : 0);
+                    }
+                }
+            }
+
+            if(deg === null || deg < 0 || deg >= 360) {
+                empty.style.display = 'block';
+                cont.style.display = 'none';
+                return;
+            }
+
+            empty.style.display = 'none';
+            cont.style.display = 'block';
+
+            const span = 30 / expDVal;
+            const idx = Math.floor(deg / span);
+            const sign = ZODIAC[idx % 12];
+            const start = idx * span;
+            const end = (idx + 1) * span;
+
+            document.getElementById('calc-res-icon').textContent = sign.short;
+            document.getElementById('calc-res-icon').style.color = sign.colorDark;
+            document.getElementById('calc-res-name').textContent = sign.name;
+            document.getElementById('calc-res-span').textContent = `${toDMS(start)} - ${toDMS(end)}`;
+            document.getElementById('calc-res-idx').textContent = idx + 1;
+        }
+
+        // --- ZODIAC TOOL ---
+        function calculateZodiacDiv() {
+            const n = parseFloat(document.getElementById('zd-input').value);
+            const box = document.getElementById('zd-result');
+            const warn = document.getElementById('zd-warn');
+            if(!n || n<=0) { box.textContent = '-'; return; }
+            
+            const span = 360 / n;
+            box.textContent = toDMS(span);
+            
+            const sec = span * 3600;
+            warn.style.display = (Math.abs(sec - Math.round(sec)) < 0.01) ? 'none' : 'block';
+        }
+
+        // --- PRINT ---
+        function printActiveView() {
+            if (currentView === 'dashboard') {
+                window.print(); // Dashboard prints natively well
+            } else {
+                // Explorer: Print Table View
+                const title = `D${expDVal} Reference Table`;
+                const content = document.getElementById('ref-table-container').innerHTML;
+                const win = window.open('','','width=900,height=800');
+                win.document.write(`<html><head><title>${title}</title>
+                    <style>body{font-family:sans-serif;} table{width:100%;border-collapse:collapse;} th,td{border-bottom:1px solid #ccc;padding:8px;text-align:left;}</style>
+                </head><body><h1>${title}</h1>${content}</body></html>`);
+                win.document.close();
+                win.print();
+            }
+        }
+
+        // Init
+        loadSampleData();
+        generateRectificationCharts(); // Generate initially
+        switchTab('dashboard');
+    </script>
+</body>
+</html>
